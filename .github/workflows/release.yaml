@@ -24,7 +24,7 @@ jobs:
         run: go get .
       - name: Build
         working-directory: cli
-        run: GOOS="${TARGET}" ARCH="${ARCH}" go -o github-notifier build -v .
+        run: GOOS="${TARGET}" ARCH="${ARCH}" go build -o github-notifier -v .
         env:
           TARGET: ${{ matrix.target }}
           ARCH: ${{ matrix.arch }}
