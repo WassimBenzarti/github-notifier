@@ -9,6 +9,7 @@ import (
 
 	"github.com/gen2brain/beeep"
 	"github.com/wassimbenzarti/github-notifier/github"
+	"github.com/wassimbenzarti/github-notifier/terminal"
 )
 
 type QueryRequestBody struct {
@@ -26,6 +27,9 @@ type PullRequest struct {
 func RunNotifications() {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 	accessToken := os.Getenv("GITHUB_TOKEN")
+	if accessToken == "" {
+		panic("GitHub token wasn't provided as a GITHUB_TOKEN enviroment variable.")
+	}
 	githubClient := github.NewGitHub(accessToken)
 
 	ticker := time.NewTicker(1 * time.Minute)
@@ -55,7 +59,7 @@ func RunNotifications() {
 		if len(*pullRequests) > 0 {
 			messages = append(messages, fmt.Sprintf("You have %d new PR(s) to review", len(*pullRequests)))
 			for _, pullRequest := range *pullRequests {
-				fmt.Printf("REVIEW: %s\t%s\t%s\n", pullRequest.Author.Login, pullRequest.Title, pullRequest.Url)
+				terminal.ColorfulPrintf(terminal.Blue, "REVIEW: %s\t%s\t%s\n", pullRequest.Author.Login, pullRequest.Title, pullRequest.Url)
 			}
 		} else {
 			slog.Debug("No new notifications")
@@ -70,12 +74,12 @@ func RunNotifications() {
 			messages = append(messages, fmt.Sprintf("You have %d new review(s) or check(s)", len(*myPullrequests)))
 			for _, pr := range *myPullrequests {
 
-				fmt.Printf("PR title: %s\t%s\n", pr.PullRequest.Title, pr.PullRequest.Url)
+				terminal.ColorfulPrintf(terminal.Green, "PR title: %s\t%s\n", pr.PullRequest.Title, pr.PullRequest.Url)
 				for _, review := range pr.Reviews {
-					fmt.Printf("\tReview by: %s\n", review.Author.Login)
+					terminal.ColorfulPrintf(terminal.Green, "\tReview by: %s\n", review.Author.Login)
 				}
 				for _, check := range pr.Checks {
-					fmt.Printf("\tCompleted check: %s\n", check.Name)
+					terminal.ColorfulPrintf(terminal.Green, "\tCompleted check: %s\n", check.Name)
 				}
 			}
 		}

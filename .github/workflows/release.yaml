@@ -1,0 +1,27 @@
+name: Go
+on: [push]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+      - name: Install dependencies
+        working-directory: cli
+        run: go get .
+      - name: Build
+        working-directory: cli
+        run: go build -v ./...
+      - uses: actions/upload-artifact@v4
+        with:
+          name: github-notifier
+          path: ./worker/github-notifier
+      
