@@ -1,4 +1,4 @@
-name: Go
+name: Build go
 on: [push]
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
         run: go get .
       - name: Build
         working-directory: cli
-        run: go build -v ./...
+        run: go build -v .
       - uses: actions/upload-artifact@v4
         with:
           name: github-notifier
