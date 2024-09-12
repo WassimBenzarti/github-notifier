@@ -5,9 +5,14 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            target: linux
+            arch: amd64
+          - os: macos-latest 
+            target: darwin
+            arch: amd64
     runs-on: ${{ matrix.os }}
-
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
@@ -19,9 +24,15 @@ jobs:
         run: go get .
       - name: Build
         working-directory: cli
-        run: go build -v .
-      - uses: actions/upload-artifact@v4
-        with:
-          name: github-notifier-${{ matrix.os }}
-          path: ./cli/github-notifier
+        run: GOOS="${TARGET}" ARCH="${ARCH}" go -o github-notifier build -v .
+        env:
+          TARGET: ${{ matrix.target }}
+          ARCH: ${{ matrix.arch }}
+  # release:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Publish release
+  #       run: gh release edit ${{ github.ref_name }} --draft=false --repo ${{ github.repository }}
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
