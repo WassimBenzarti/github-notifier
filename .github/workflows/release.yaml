@@ -23,5 +23,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: github-notifier
-          path: ./worker/github-notifier
+          path: ./cli/github-notifier
       
