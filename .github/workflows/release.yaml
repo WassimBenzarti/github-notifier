@@ -45,16 +45,16 @@ jobs:
           ARCH: ${{ matrix.arch }}
       - name: Package the binary and upload to the draft release
         run: |
-          tar -czvf "${ARCHIVE_NAME}"
+          tar -czvf "${ARCHIVE_NAME}" github-notifier
           gh release upload ${{ github.ref_name }} "${ARCHIVE_NAME}"
         env:
           ARCHIVE_NAME: github-notifier-${{matrix.target}}-${{matrix.arch}}.gz
           
-  # release:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Publish release
-  #       run: gh release edit ${{ github.ref_name }} --draft=false --repo ${{ github.repository }}
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish release
+        run: gh release edit ${{ github.ref_name }} --draft=false --repo ${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
