@@ -25,6 +25,9 @@ jobs:
           - os: macos-latest 
             target: darwin
             arch: amd64
+          - os: macos-latest 
+            target: darwin
+            arch: arm64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     permissions:
