@@ -50,10 +50,13 @@ jobs:
           gh release upload ${{ github.ref_name }} "${ARCHIVE_NAME}"
         env:
           ARCHIVE_NAME: github-notifier-${{matrix.target}}-${{matrix.arch}}.gz
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
   release:
     needs: [build]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Publish release
         run: gh release edit ${{ github.ref_name }} --draft=false --repo ${{ github.repository }}
