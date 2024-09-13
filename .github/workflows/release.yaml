@@ -1,7 +1,17 @@
 name: Build go
-on: [push]
-
+on: 
+  push:
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+
 jobs:
+  draft:
+    name: Draft
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create draft release
+        run: gh release create ${{ github.ref_name }} --draft --generate-notes --repo ${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build:
     strategy:
       matrix:
@@ -13,6 +23,7 @@ jobs:
             target: darwin
             arch: amd64
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
@@ -28,6 +39,13 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
           ARCH: ${{ matrix.arch }}
+      - name: Package the binary and upload to the draft release
+        run: |
+          tar -czvf "${ARCHIVE_NAME}"
+          gh release upload ${{ github.ref_name }} "${ARCHIVE_NAME}"
+        env:
+          ARCHIVE_NAME: github-notifier-${{matrix.target}}-${{matrix.arch}}.gz
+          
   # release:
   #   runs-on: ubuntu-latest
   #   steps:
