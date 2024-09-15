@@ -3,11 +3,10 @@ package cli
 import (
 	"bufio"
 	"fmt"
-	"io/fs"
-	"log"
 	"log/slog"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -33,60 +32,43 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	slog.SetLogLoggerLevel(slog.LevelDebug)
+	cobra.OnInitialize(findDefaultConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/github-notifier/config.json)")
 	rootCmd.PersistentFlags().Bool("init", false, "Will re-initialize the config file")
 }
 
-func initConfig() {
-	// Don't forget to read config either from cfgFile or from home directory!
+func findDefaultConfig() {
+	home, err := os.UserHomeDir()
+	cobra.CheckErr(err)
+
+	// Default config directory path
+	configDir := filepath.Join(home, ".config", "github-notifier")
+	configFilePath := filepath.Join(configDir, "config.json")
+
+	viper.AddConfigPath(configDir)
+	viper.SetConfigType("json")
+	viper.SetConfigName("config")
+
+	// Check if the config is overridden
 	if cfgFile != "" {
 		workingdir, err := os.Getwd()
 		if err != nil {
 			cobra.CheckErr(err)
 		}
 
+		configFilePath = path.Join(workingdir, cfgFile)
 		// Use config file from the flag.
-		viper.SetConfigFile(path.Join(workingdir, cfgFile))
-	} else {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			cobra.CheckErr(err)
-		}
-
-		viper.AddConfigPath(path.Join(home, ".config", "github-notifier"))
-		viper.SetConfigType("json")
-		viper.SetConfigName("config.json")
+		viper.SetConfigFile(configFilePath)
+		slog.Debug("Using the specified config file under", "path", configFilePath)
+		return
 	}
-
-	if err := viper.ReadInConfig(); err != nil {
-		_, isConfigFileNotFound := err.(viper.ConfigFileNotFoundError)
-		_, isPathError := err.(*fs.PathError)
-		if isConfigFileNotFound || isPathError {
-			slog.Info("Config file not found, initializing a new config file with", "path", viper.ConfigFileUsed())
-			init, err := rootCmd.Flags().GetBool("init")
-			if err != nil {
-				cobra.CheckErr(err)
-			}
-			if init {
-				askUserForDefaults()
-			}
-			err = viper.WriteConfig()
-			if err != nil {
-				cobra.CheckErr(err)
-			}
-		} else {
-			log.Fatalf("Cannot parse the config file, ensure that the file %s is a valid json", viper.ConfigFileUsed())
-		}
+	if _, err := os.Stat(configFilePath); err != nil {
+		slog.Error("It seems that the default config file doesn't exist, Try running `github-notifier config init`.", "path", configFilePath)
+		return // We want to allow the user to use the init the command
 	}
-
-}
-
-func askUserForDefaults() {
-	viper.Set("me", StringPrompt("What is your GitHub username?"))
-	viper.Set("org", StringPrompt("What is your organization?"))
-	viper.Set("team", StringPrompt("What is your GitHub team (<org>/<team>)?"))
-	viper.Set("team-members", ListPrompt("Type the names of your teammates or people you want to follow (Hit <Enter> after every name, Hit <Enter> twice when the list is done)\n> "))
+	err = viper.ReadInConfig()
+	cobra.CheckErr(err)
 }
 
 func StringPrompt(label string) string {

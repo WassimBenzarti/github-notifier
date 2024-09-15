@@ -25,7 +25,6 @@ type PullRequest struct {
 }
 
 func RunNotifications() {
-	slog.SetLogLoggerLevel(slog.LevelDebug)
 	accessToken := os.Getenv("GITHUB_TOKEN")
 	if accessToken == "" {
 		panic("GitHub token wasn't provided as a GITHUB_TOKEN enviroment variable.")
