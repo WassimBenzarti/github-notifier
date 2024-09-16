@@ -64,7 +64,7 @@ func findDefaultConfig() {
 		return
 	}
 	if _, err := os.Stat(configFilePath); err != nil {
-		slog.Error("It seems that the default config file doesn't exist, Try running `github-notifier config init`.", "path", configFilePath)
+		// slog.Error("It seems that the default config file doesn't exist, Try running `github-notifier config init`.", "path", configFilePath)
 		return // We want to allow the user to use the init the command
 	}
 	err = viper.ReadInConfig()
