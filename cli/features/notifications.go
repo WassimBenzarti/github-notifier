@@ -24,7 +24,7 @@ type PullRequest struct {
 	Url   string `json:"url"`
 }
 
-func RunNotifications() {
+func RunNotifications(organization string, team string, author string, teamMembers []string) {
 	accessToken := os.Getenv("GITHUB_TOKEN")
 	if accessToken == "" {
 		panic("GitHub token wasn't provided as a GITHUB_TOKEN enviroment variable.")
@@ -44,10 +44,11 @@ func RunNotifications() {
 			firstTime = false
 		}
 
-		pullRequests, err := githubClient.GetPullRequests("egym",
-			"egym/sre",
-			"wassimbenzarti",
-			[]string{"wassimbenzarti", "eldad", "leonnicolas", "eldad", "kolsware", "Akaame", "gjabell", "martykuentzel", "viktorkholod", "jhandguy", "kostya2011"},
+		pullRequests, err := githubClient.GetPullRequests(
+			organization,
+			team,
+			author,
+			teamMembers,
 			createdAt,
 		)
 		if err != nil {
@@ -58,7 +59,7 @@ func RunNotifications() {
 		if len(*pullRequests) > 0 {
 			messages = append(messages, fmt.Sprintf("You have %d new PR(s) to review", len(*pullRequests)))
 			for _, pullRequest := range *pullRequests {
-				terminal.ColorfulPrintf(terminal.Blue, "REVIEW: %s\t%s\t%s\n", pullRequest.Author.Login, pullRequest.Title, pullRequest.Url)
+				terminal.ColorfulPrintf(terminal.LightBlue, "REVIEW: %s\t%s\t%s\n", pullRequest.Author.Login, pullRequest.Title, pullRequest.Url)
 			}
 		} else {
 			slog.Debug("No new notifications")
