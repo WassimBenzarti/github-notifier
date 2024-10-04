@@ -13,12 +13,18 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	cfgFile  string
+	logLevel int
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "github-notifier",
 	Short: "GitHub notifier",
 	Long:  `A CLI for pushing notifications of important GitHub events (Review required, Review received, Checks done, etc.)`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		slog.SetLogLoggerLevel(slog.Level(logLevel))
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
@@ -32,9 +38,9 @@ func Execute() {
 }
 
 func init() {
-	slog.SetLogLoggerLevel(slog.LevelDebug)
 	cobra.OnInitialize(findDefaultConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/github-notifier/config.json)")
+	rootCmd.PersistentFlags().IntVar(&logLevel, "log-level", int(slog.LevelDebug), "log level like defined in https://pkg.go.dev/log/slog#Level")
 	rootCmd.PersistentFlags().Bool("init", false, "Will re-initialize the config file")
 }
 

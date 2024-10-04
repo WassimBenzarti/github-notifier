@@ -61,9 +61,7 @@ func initConfig() {
 	// Check if the config is overridden
 	if cfgFile != "" {
 		workingdir, err := os.Getwd()
-		if err != nil {
-			cobra.CheckErr(err)
-		}
+		cobra.CheckErr(err)
 
 		configFilePath = path.Join(workingdir, cfgFile)
 		// Use config file from the flag.
