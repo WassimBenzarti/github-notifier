@@ -37,7 +37,7 @@ type PullRequest struct {
 func (github *GitHub) searchPullRequests(searchQuery string) (*[]PullRequest, error) {
 	logger := slog.Default()
 	logger.Debug("Search query", "value", searchQuery)
-	var query = QueryRequestBody{
+	query := QueryRequestBody{
 		Query: `query { 
 			search(query: "` + searchQuery + `", type: ISSUE, first: 100) {
 				issueCount
@@ -64,16 +64,16 @@ func (github *GitHub) searchPullRequests(searchQuery string) (*[]PullRequest, er
 		return nil, err
 	}
 	req, err := http.NewRequest("POST", "https://api.github.com/graphql", bytes.NewBuffer(jsonStr))
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", github.accessToken))
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", github.accessToken))
 	res, err := github.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
 	if res.StatusCode != 200 {
 		return nil, fmt.Errorf(fmt.Sprintf("Status code is %s instead of 200", res.Status))
-	}
-	if err != nil {
-		return nil, err
 	}
 	responseBody, err := io.ReadAll(res.Body)
 	if err != nil {
@@ -81,8 +81,7 @@ func (github *GitHub) searchPullRequests(searchQuery string) (*[]PullRequest, er
 	}
 
 	var body Response
-	err = json.Unmarshal(responseBody, &body)
-	if err != nil {
+	if err := json.Unmarshal(responseBody, &body); err != nil {
 		return nil, err
 	}
 	var pullRequests []PullRequest
@@ -93,7 +92,6 @@ func (github *GitHub) searchPullRequests(searchQuery string) (*[]PullRequest, er
 }
 
 func (github *GitHub) GetPullRequests(organization string, team string, me string, authors []string, createdAt time.Time) (*[]PullRequest, error) {
-
 	var strAuthors []string
 	for _, author := range authors {
 		strAuthors = append(strAuthors, fmt.Sprintf("author:%s", author))
