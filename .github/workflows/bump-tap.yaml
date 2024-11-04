@@ -1,0 +1,123 @@
+name: Create a new release
+on: 
+  # TODO: Remove after testing
+  push:
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: "Release type"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  create_draft_release:
+    name: Create a draft release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{steps.version.outputs.version}}
+    steps:
+      - name: Get version
+        id: version
+        run: |
+          version=$(gh release view --json 'tagName' --jq '.tagName' --repo ${REPOSITORY})
+          major="$(echo "${version}" | cut -d'.' -f1)"
+          minor="$(echo "${version}" | cut -d'.' -f2)"
+          patch="$(echo "${version}" | cut -d'.' -f3)"
+          case "$RELEASE_TYPE" in
+          major)
+            major=$((major+1))
+            minor=0
+            patch=0
+            ;;
+          minor)
+            minor=$((minor+1))
+            patch=0
+            ;;
+          patch)
+            patch=$((patch+1))
+            ;;
+          *)
+            echo "Invalid release type ${RELEASE_TYPE}"
+            exit 1
+          esac
+          echo "version=${major}.${minor}.${patch}" >>"${GITHUB_OUTPUT}"
+        env:
+          RELEASE_TYPE: ${{ inputs.release-type || 'patch' }}
+          REPOSITORY: ${{github.repository}}
+
+      - name: Create a draft release
+        run: gh release create ${VERSION} --draft --generate-notes --repo ${REPOSITORY}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{github.repository}}
+          VERSION: v${{steps.version.outputs.version}}
+
+  build_binaries:
+    needs: [create_draft_release]
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux
+            arch: amd64
+          - os: macos-latest 
+            target: darwin
+            arch: amd64
+          - os: macos-latest 
+            target: darwin
+            arch: arm64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+      - name: Install dependencies
+        working-directory: cli
+        run: go get .
+      - name: Build
+        working-directory: cli
+        run: GOOS="${TARGET}" ARCH="${ARCH}" go build -o github-notifier -v .
+        env:
+          TARGET: ${{ matrix.target }}
+          ARCH: ${{ matrix.arch }}
+      - name: Package the binary and upload to the draft release
+        run: |
+          tar -C cli -czvf "${ARCHIVE_NAME}" github-notifier
+          gh release upload ${{ github.ref_name }} "${ARCHIVE_NAME}"
+        env:
+          ARCHIVE_NAME: github-notifier-${{matrix.target}}-${{matrix.arch}}.gz
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release:
+    needs: [build_binaries]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish release
+        run: gh release edit ${VERSION} --draft=false --repo ${REPOSITORY}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{github.repository}}
+          VERSION: v${{needs.build_binaries.outputs.version}}
+
+  update_tap:
+    name: "Update the Homebrew tap"
+    runs-on: ubuntu:latest
+    steps:
+      - name: Trigger the workflow for the update
+        run: |
+          gh workflow --repo ${REPOSTIROY} run auto-bump.yaml
+        env:
+          REPOSITORY: wassimbenzarti/homebrew-tap
