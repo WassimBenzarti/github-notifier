@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/gen2brain/beeep"
-	"github.com/wassimbenzarti/github-notifier/github"
-	"github.com/wassimbenzarti/github-notifier/terminal"
+	"github.com/wassimbenzarti/github-notifier/cli/github"
+	"github.com/wassimbenzarti/github-notifier/cli/terminal"
 )
 
 type QueryRequestBody struct {
@@ -87,5 +87,4 @@ func RunNotifications(organization string, team string, author string, teamMembe
 			beeep.Alert("GH Notifier", strings.Join(messages, "\n"), "assets/notification.png")
 		}
 	}
-
 }

@@ -1,4 +1,4 @@
-module github.com/wassimbenzarti/github-notifier
+module github.com/wassimbenzarti/github-notifier/cli
 
 go 1.22.4
 
