@@ -39,10 +39,8 @@ jobs:
         with:
           go-version: '1.22.x'
       - name: Install dependencies
-        working-directory: cli
         run: go get .
       - name: Build
-        working-directory: cli
         run: GOOS="${TARGET}" ARCH="${ARCH}" go build -o github-notifier -v .
         env:
           TARGET: ${{ matrix.target }}
