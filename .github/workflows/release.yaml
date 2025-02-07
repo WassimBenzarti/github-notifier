@@ -49,7 +49,7 @@ jobs:
           ARCH: ${{ matrix.arch }}
       - name: Package the binary and upload to the draft release
         run: |
-          tar -C cli -czvf "${ARCHIVE_NAME}" github-notifier
+          tar -czvf "${ARCHIVE_NAME}" github-notifier
           gh release upload ${{ github.ref_name }} "${ARCHIVE_NAME}"
         env:
           ARCHIVE_NAME: github-notifier-${{matrix.target}}-${{matrix.arch}}.gz
