@@ -147,11 +147,11 @@ func (github *GitHub) GetNewReviewsOrNewChecks(author string, since time.Time) (
 		return nil, err
 	}
 	res, err := github.client.Do(req)
-	if res.StatusCode != 200 {
-		return nil, fmt.Errorf(fmt.Sprintf("Status code is %s instead of 200", res.Status))
-	}
 	if err != nil {
 		return nil, err
+	}
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("Status code is %s instead of 200", res.Status)
 	}
 	responseBody, err := io.ReadAll(res.Body)
 	if err != nil {

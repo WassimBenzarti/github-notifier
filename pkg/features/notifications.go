@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/gen2brain/beeep"
-	"github.com/wassimbenzarti/github-notifier/github"
-	"github.com/wassimbenzarti/github-notifier/terminal"
+	"github.com/wassimbenzarti/github-notifier/pkg/github"
+	"github.com/wassimbenzarti/github-notifier/pkg/terminal"
 )
 
 var UseNotifySend = false
@@ -75,7 +75,9 @@ func RunNotifications(organization string, team string, author string, teamMembe
 			createdAt,
 		)
 		if err != nil {
-			panic(err)
+			slog.Warn("Failed to fetch Pull Requests because of an error. Retrying in 1 min...", "Error", err)
+			time.Sleep(60 * time.Second)
+			continue
 		}
 
 		var messages []string
@@ -91,7 +93,9 @@ func RunNotifications(organization string, team string, author string, teamMembe
 
 		myPullrequests, err := githubClient.GetNewReviewsOrNewChecks("@me", createdAt)
 		if err != nil {
-			panic(err)
+			slog.Warn("Failed to fetch Pull Requests because of an error. Retrying in 1 min...", "Error", err)
+			time.Sleep(60 * time.Second)
+			continue
 		}
 
 		if len(*myPullrequests) > 0 {

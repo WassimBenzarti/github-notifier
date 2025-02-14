@@ -3,7 +3,8 @@ package cli
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/wassimbenzarti/github-notifier/features"
+
+	"github.com/wassimbenzarti/github-notifier/pkg/features"
 )
 
 var runCommand = &cobra.Command{
