@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -30,8 +29,9 @@ type PullRequest struct {
 	Author struct {
 		Login string `json:"login"`
 	}
-	Title string `json:"title"`
-	Url   string `json:"url"`
+	Title     string    `json:"title"`
+	Url       string    `json:"url"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 func (github *GitHub) searchPullRequests(searchQuery string) (*[]PullRequest, error) {
@@ -52,6 +52,7 @@ func (github *GitHub) searchPullRequests(searchQuery string) (*[]PullRequest, er
 								login
 							}
 							title
+							updatedAt
 							url
 						}
 					}
@@ -75,15 +76,12 @@ func (github *GitHub) searchPullRequests(searchQuery string) (*[]PullRequest, er
 	if res.StatusCode != 200 {
 		return nil, fmt.Errorf(fmt.Sprintf("Status code is %s instead of 200", res.Status))
 	}
-	responseBody, err := io.ReadAll(res.Body)
-	if err != nil {
+
+	var body Response
+	if err := json.NewDecoder(res.Body).Decode(&body); err != nil {
 		return nil, err
 	}
 
-	var body Response
-	if err := json.Unmarshal(responseBody, &body); err != nil {
-		return nil, err
-	}
 	var pullRequests []PullRequest
 	for _, edge := range body.Data.Search.Edges {
 		pullRequests = append(pullRequests, edge.Node)
@@ -91,13 +89,13 @@ func (github *GitHub) searchPullRequests(searchQuery string) (*[]PullRequest, er
 	return &pullRequests, nil
 }
 
-func (github *GitHub) GetPullRequests(organization string, team string, me string, authors []string, createdAt time.Time) (*[]PullRequest, error) {
+func (github *GitHub) GetPullRequests(organization string, team string, me string, authors []string, updatedAt time.Time) (*[]PullRequest, error) {
 	var strAuthors []string
 	for _, author := range authors {
 		strAuthors = append(strAuthors, fmt.Sprintf("author:%s", author))
 	}
 
-	searchQuery := fmt.Sprintf(`is:pr is:open review-requested:%s org:%s archived:false %s created:>=%s`, me, organization, strings.Join(strAuthors, " "), createdAt.UTC().Format(time.RFC3339))
+	searchQuery := fmt.Sprintf(`is:pr -is:draft is:open review-requested:%s org:%s archived:false %s updated:>=%s`, me, organization, strings.Join(strAuthors, " "), updatedAt.UTC().Format(time.RFC3339))
 
 	pullRequests, err := github.searchPullRequests(searchQuery)
 	if err != nil {
@@ -105,7 +103,7 @@ func (github *GitHub) GetPullRequests(organization string, team string, me strin
 	}
 
 	// Add PRs from private users
-	allUsersQuery := fmt.Sprintf(`is:pr is:open team-review-requested:%s org:%s archived:false created:>=%s`, team, organization, createdAt.UTC().Format(time.RFC3339))
+	allUsersQuery := fmt.Sprintf(`is:pr -is:draft is:open team-review-requested:%s org:%s archived:false updated:>=%s`, team, organization, updatedAt.UTC().Format(time.RFC3339))
 	allUsersPRs, err := github.searchPullRequests(allUsersQuery)
 	if err != nil {
 		return nil, err

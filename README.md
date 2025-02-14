@@ -21,5 +21,4 @@ On startup, we check the new reviews and checks that were completed in the last 
 # Known limitations
 1. One person in the team reviewing all PRs might eventually impact the quality of code (this tool doesn't notify you about already reviewed PRs)
 2. Notifications can always be a subjectively distracting, so you have to use it wisely. Currently this tool doesn't support features to limit the distractions (e.g. only alert if there are more than 3 events)
-3. Drafts brings you a notification
-4. If you review a PR but don't approve it, the owner of the PR needs to request your review again (by clicking the "request again" button on GitHub) to get a notification
+3. If you review a PR but don't approve it, the owner of the PR needs to request your review again (by clicking the "request again" button on GitHub) to get a notification

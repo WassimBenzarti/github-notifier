@@ -25,7 +25,10 @@ var rootCmd = &cobra.Command{
 	Short: "GitHub notifier",
 	Long:  `A CLI for pushing notifications of important GitHub events (Review required, Review received, Checks done, etc.)`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		slog.SetLogLoggerLevel(slog.Level(logLevel))
+		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			AddSource: true,
+			Level:     slog.Level(logLevel),
+		})))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()

@@ -49,6 +49,14 @@ func notifySend(summary string, body string, url string) {
 	}()
 }
 
+func displayUpdateTime(updatedAt time.Time) string {
+	if updatedAt.Format("2006-01-02") == time.Now().Format("2006-01-02") {
+		return updatedAt.Local().Format(time.Kitchen)
+	}
+	duration := time.Since(updatedAt)
+	return fmt.Sprintf("%d days ago", int(duration.Hours()/24+1))
+}
+
 func RunNotifications(organization string, team string, author string, teamMembers []string) {
 	accessToken := os.Getenv("GITHUB_TOKEN")
 	if accessToken == "" {
@@ -61,11 +69,11 @@ func RunNotifications(organization string, team string, author string, teamMembe
 	firstTime := true
 	for ; true; <-ticker.C {
 
-		createdAt := time.Now().Add(-1*time.Minute - 1*time.Second)
+		updatedAt := time.Now().Add(-1*time.Minute - 1*time.Second)
 
-		// Check PRs from the last day for the first fetch
+		// Check PRs that were updated within the last 3 days
 		if firstTime {
-			createdAt = time.Now().Add(-24 * time.Hour)
+			updatedAt = time.Now().Add(-24 * 3 * time.Hour)
 			firstTime = false
 		}
 
@@ -74,7 +82,7 @@ func RunNotifications(organization string, team string, author string, teamMembe
 			team,
 			author,
 			teamMembers,
-			createdAt,
+			updatedAt,
 		)
 		if err != nil {
 			slog.Warn("Failed to fetch Pull Requests because of an error. Retrying in 1 min...", "Error", err)
@@ -87,13 +95,13 @@ func RunNotifications(organization string, team string, author string, teamMembe
 			messages = append(messages, fmt.Sprintf("You have %d new PR(s) to review", len(*pullRequests)))
 			for _, pullRequest := range *pullRequests {
 				terminal.ColorfulPrintf(terminal.LightBlue, "REVIEW: %s\t%s\t%s\n", pullRequest.Author.Login, pullRequest.Title, pullRequest.Url)
-				notifySend(fmt.Sprintf("PR @%s", pullRequest.Author.Login), pullRequest.Title, pullRequest.Url)
+				notifySend(fmt.Sprintf("PR @%s %s", pullRequest.Author.Login, displayUpdateTime(pullRequest.UpdatedAt)), pullRequest.Title, pullRequest.Url)
 			}
 		} else {
 			slog.Debug("No new notifications")
 		}
 
-		myPullrequests, err := githubClient.GetNewReviewsOrNewChecks("@me", createdAt)
+		myPullrequests, err := githubClient.GetNewReviewsOrNewChecks("@me", updatedAt)
 		if err != nil {
 			slog.Warn("Failed to fetch Pull Requests because of an error. Retrying in 1 min...", "Error", err)
 			time.Sleep(60 * time.Second)
