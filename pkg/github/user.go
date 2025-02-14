@@ -81,7 +81,7 @@ func (github *GitHub) GetNewReviewsOrNewChecks(author string, since time.Time) (
 	logger := slog.Default()
 	searchQuery := fmt.Sprintf("is:open is:pr author:%s", author)
 	logger.Debug("getNewReviewsOrNewChecks", "searchQuery", searchQuery)
-	var query = QueryRequestBody{
+	query := QueryRequestBody{
 		Query: `query {
   search(query: "` + searchQuery + `", type: ISSUE, first: 10) {
     issueCount

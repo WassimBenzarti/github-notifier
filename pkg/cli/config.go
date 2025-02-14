@@ -25,7 +25,7 @@ var configCommand = &cobra.Command{
 	},
 }
 
-func userEditor() string {
+func getUserEditor() string {
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
 		// TODO check if binary exists
@@ -38,7 +38,7 @@ var editCommand = &cobra.Command{
 	Use:   "edit",
 	Short: "Edit the config",
 	Run: func(cmd *cobra.Command, args []string) {
-		editorCommand := exec.Command(userEditor(), viper.ConfigFileUsed())
+		editorCommand := exec.Command(getUserEditor(), viper.ConfigFileUsed())
 		editorCommand.Stdin = os.Stdin
 		editorCommand.Stdout = os.Stdout
 		if err := editorCommand.Run(); err != nil {

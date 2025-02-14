@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/gen2brain/beeep"
+
+	"github.com/wassimbenzarti/github-notifier/pkg/assets"
 	"github.com/wassimbenzarti/github-notifier/pkg/github"
 	"github.com/wassimbenzarti/github-notifier/pkg/terminal"
 )
@@ -32,19 +34,19 @@ func notifySend(summary string, body string, url string) {
 		return
 	}
 
-	cmd := exec.Command("notify-send", "-i", "assets/notification.png", summary, body, "-A", "OPEN-URL=Open URL")
-	b, err := cmd.Output()
-	if err != nil {
-		// ignore notify-send errors
-		slog.Debug("notify-send error: %w", err)
-		return
-	}
+	go func() {
+		cmd := exec.Command("notify-send", "-i", assets.NotificationIconFilePath, summary, body, "-A", "OPEN-URL=Open URL")
+		b, err := cmd.Output()
+		if err != nil {
+			slog.Debug("failed to call notify-send", "err", err.Error())
+			return
+		}
 
-	if strings.TrimSpace(string(b)) == "OPEN-URL" {
-		// xdg-open url
-		cmd := exec.Command("xdg-open", url)
-		cmd.Run()
-	}
+		if strings.TrimSpace(string(b)) == "OPEN-URL" {
+			cmd := exec.Command("xdg-open", url)
+			cmd.Run()
+		}
+	}()
 }
 
 func RunNotifications(organization string, team string, author string, teamMembers []string) {
@@ -118,9 +120,8 @@ func RunNotifications(organization string, team string, author string, teamMembe
 		}
 		if len(messages) > 0 {
 			if !UseNotifySend {
-				beeep.Alert("GH Notifier", strings.Join(messages, "\n"), "assets/notification.png")
+				beeep.Alert("GH Notifier", strings.Join(messages, "\n"), assets.NotificationIconFilePath)
 			}
 		}
 	}
-
 }

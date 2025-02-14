@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -43,7 +44,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/github-notifier/config.json)")
 	rootCmd.PersistentFlags().IntVar(&logLevel, "log-level", int(slog.LevelInfo), "log level like defined in https://pkg.go.dev/log/slog#Level")
 	rootCmd.PersistentFlags().Bool("init", false, "Will re-initialize the config file")
-	rootCmd.PersistentFlags().BoolVar(&UseNotifySend, "notify-send", true, "Use notify-send (supports actions; Linux-specific)")
+	rootCmd.PersistentFlags().BoolVar(&UseNotifySend, "notify-send", runtime.GOOS == "linux", "Use notify-send (supports actions; Linux-specific)")
 }
 
 func findDefaultConfig() {
