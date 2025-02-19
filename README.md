@@ -44,6 +44,12 @@ On startup, we check the new reviews and checks that were completed in the last 
    github-notifier run
    ```
 
+### Using a specific commit ID
+To use a specific commit ID instead of the `@latest` placeholder, replace `@latest` with `@<commit-id>` in the `go install` command. For example:
+```sh
+go install github.com/wassimbenzarti/github-notifier@<commit-id>
+```
+
 # Known limitations
 1. One person in the team reviewing all PRs might eventually impact the quality of code (this tool doesn't notify you about already reviewed PRs)
 2. Notifications can always be a subjectively distracting, so you have to use it wisely. Currently this tool doesn't support features to limit the distractions (e.g. only alert if there are more than 3 events)
