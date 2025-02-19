@@ -17,6 +17,32 @@ On startup, we check the new reviews and checks that were completed in the last 
 
 ## Getting started
 
+### Prerequisites
+- Go 1.22.x or later
+- Git
+
+### Installation
+1. Install Go from the [official website](https://golang.org/dl/).
+2. Install the binary using `go install`:
+   ```sh
+   go install github.com/wassimbenzarti/github-notifier@latest
+   ```
+
+### Configuration
+1. Set up the environment variables:
+   ```sh
+   export GITHUB_TOKEN=your_github_token
+   ```
+2. Run the `init` command to create the configuration file:
+   ```sh
+   github-notifier config init
+   ```
+
+### Running the application
+1. Start the application:
+   ```sh
+   github-notifier run
+   ```
 
 # Known limitations
 1. One person in the team reviewing all PRs might eventually impact the quality of code (this tool doesn't notify you about already reviewed PRs)
